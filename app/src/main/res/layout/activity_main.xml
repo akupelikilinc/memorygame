@@ -3,37 +3,52 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:gravity="center"
+    android:background="#F3F4F6">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hafıza Oyunu"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
 
     <TextView
         android:id="@+id/scoreTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="En Yüksek Skor: 0"
-        android:textSize="20sp" />
+        android:text="En Yüksek Skor: -"
+        android:textSize="18sp"
+        android:layout_marginBottom="8dp"/>
 
     <TextView
         android:id="@+id/movesTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
         android:text="Hamle Sayısı: 0"
-        android:textSize="20sp" />
+        android:textSize="18sp"
+        android:textColor="#EF4444"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
 
     <GridLayout
         android:id="@+id/gridLayout"
-        android:layout_width="375dp"
-        android:layout_height="566dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:layout_weight="1"
         android:columnCount="4"
-        android:rowCount="4" />
+        android:rowCount="4"
+        android:alignmentMode="alignMargins"
+        android:useDefaultMargins="true"/>
 
     <Button
         android:id="@+id/restartButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Yeniden Başlat" />
-
+        android:text="Yeniden Başlat"
+        android:backgroundTint="#3B82F6"
+        android:layout_marginTop="16dp"
+        android:paddingHorizontal="24dp"/>
 </LinearLayout>
