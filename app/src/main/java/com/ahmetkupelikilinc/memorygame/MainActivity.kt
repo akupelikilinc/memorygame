@@ -14,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.view.animation.LinearInterpolator
 import android.widget.Button
 import android.widget.GridLayout
@@ -23,6 +24,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import java.util.Date
+import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
     private lateinit var cards: List<MemoryCard>
@@ -58,7 +60,9 @@ class MainActivity : AppCompatActivity() {
     private var isTimeMode = false
     private var remainingTime = 0
     private var initialTime = 0
-
+    private var currentTheme = "animals"
+    private var userSelectedTheme = false
+    
     companion object {
         fun newIntent(context: Context, challenge: DailyChallenge): Intent {
             return Intent(context, MainActivity::class.java).apply {
@@ -103,8 +107,6 @@ class MainActivity : AppCompatActivity() {
             "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱", "🪀", "🏓"
         )
     )
-    
-    private var currentTheme = "animals"
     
     private enum class Difficulty {
         EASY, MEDIUM, HARD
@@ -157,6 +159,8 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun showThemeSelectionDialog() {
+        userSelectedTheme = true
+        
         val themes = mapOf(
             "animals" to "Animals 🐶",
             "food" to "Food & Fruits 🍎",
@@ -312,19 +316,27 @@ class MainActivity : AppCompatActivity() {
     private fun setupTimer() {
         timerHandler = Handler(Looper.getMainLooper())
         timerRunnable = object : Runnable {
+            private var lastUpdateTime = System.currentTimeMillis()
+            
             override fun run() {
                 if (isGameActive) {
-                    if (isTimeMode) {
-                        remainingTime--
-                        if (remainingTime <= 0) {
-                            handleTimeUp()
-                            return
+                    val currentTime = System.currentTimeMillis()
+                    val elapsedTime = (currentTime - lastUpdateTime).toInt() / 1000
+                    
+                    if (elapsedTime >= 1) {
+                        if (isTimeMode) {
+                            remainingTime -= elapsedTime
+                            if (remainingTime <= 0) {
+                                handleTimeUp()
+                                return
+                            }
+                        } else {
+                            gameTime += elapsedTime
                         }
-                    } else {
-                        gameTime++
+                        lastUpdateTime = currentTime
+                        updateTimerText()
                     }
-                    updateTimerText()
-                    timerHandler.postDelayed(this, 1000)
+                    timerHandler.postDelayed(this, 100) // Daha sık kontrol et ama sadece saniye değiştiğinde güncelle
                 }
             }
         }
@@ -769,43 +781,78 @@ class MainActivity : AppCompatActivity() {
         val container = findViewById<ViewGroup>(android.R.id.content)
         val width = container.width
         val height = container.height
+        val centerX = width / 2f
+        val centerY = height / 2f
         
-        repeat(50) { // 50 confetti pieces
+        val colors = listOf(
+            "#FF0000", // Kırmızı
+            "#FF7F00", // Turuncu
+            "#FFFF00", // Sarı
+            "#00FF00", // Yeşil
+            "#0000FF", // Mavi
+            "#4B0082", // İndigo
+            "#8B00FF", // Mor
+            "#FF1493", // Pembe
+            "#00FFFF", // Turkuaz
+            "#FFD700"  // Altın
+        )
+        
+        repeat(100) { // Konfeti sayısını artırdım
+            val startPosition = when ((0..3).random()) {
+                0 -> Pair(-50f, (0..height).random().toFloat())
+                1 -> Pair(width + 50f, (0..height).random().toFloat())
+                2 -> Pair((0..width).random().toFloat(), -50f)
+                else -> Pair((0..width).random().toFloat(), height + 50f)
+            }
+            
             val confetti = View(this).apply {
-                setBackgroundResource(R.drawable.confetti)
-                val size = (20..40).random()
+                val size = (15..35).random() // Boyut aralığını küçülttüm
                 layoutParams = ViewGroup.LayoutParams(size, size)
-                x = (-50..width + 50).random().toFloat()
-                y = -50f
+                x = startPosition.first
+                y = startPosition.second
                 rotation = (-45..45).random().toFloat()
+                setBackgroundResource(R.drawable.confetti)
+                background.setTint(android.graphics.Color.parseColor(colors.random()))
+                alpha = Random.nextFloat() * 0.3f + 0.7f // 0.7f ile 1.0f arası
             }
             
             container.addView(confetti)
             
-            val fallDuration = (2000L..3000L).random()
-            val swayDuration = (2000L..3000L).random()
+            val targetX = centerX + (-200..200).random() // Dağılım aralığını artırdım
+            val targetY = centerY + (-200..200).random()
             
-            val fallAnimator = ObjectAnimator.ofFloat(confetti, "translationY", -50f, height + 50f).apply {
-                duration = fallDuration
-                interpolator = AccelerateInterpolator()
+            val duration = (2000L..3000L).random() // Süreyi artırdım
+            
+            val moveAnimator = ObjectAnimator.ofFloat(confetti, "translationX", 
+                0f, (targetX - confetti.x)).apply {
+                this.duration = duration
+                interpolator = DecelerateInterpolator(1.5f)
             }
             
-            val swayAnimator = ObjectAnimator.ofFloat(confetti, "translationX", 
-                confetti.x - 100f, confetti.x + 100f).apply {
-                duration = swayDuration
-                repeatMode = ObjectAnimator.REVERSE
-                repeatCount = ObjectAnimator.INFINITE
-                interpolator = AccelerateDecelerateInterpolator()
+            val moveAnimatorY = ObjectAnimator.ofFloat(confetti, "translationY",
+                0f, (targetY - confetti.y)).apply {
+                this.duration = duration
+                interpolator = DecelerateInterpolator(1.5f)
             }
             
             val rotateAnimator = ObjectAnimator.ofFloat(confetti, "rotation",
-                confetti.rotation, confetti.rotation + (-720..720).random().toFloat()).apply {
-                duration = fallDuration
+                confetti.rotation, confetti.rotation + (-1080..1080).random().toFloat()).apply {
+                this.duration = duration
                 interpolator = LinearInterpolator()
             }
             
+            val scaleX = ObjectAnimator.ofFloat(confetti, "scaleX", 0f, 1f, 0f).apply {
+                this.duration = duration
+                interpolator = AccelerateInterpolator()
+            }
+            
+            val scaleY = ObjectAnimator.ofFloat(confetti, "scaleY", 0f, 1f, 0f).apply {
+                this.duration = duration
+                interpolator = AccelerateInterpolator()
+            }
+            
             AnimatorSet().apply {
-                playTogether(fallAnimator, swayAnimator, rotateAnimator)
+                playTogether(moveAnimator, moveAnimatorY, rotateAnimator, scaleX, scaleY)
                 addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator) {
                         container.removeView(confetti)
@@ -822,6 +869,13 @@ class MainActivity : AppCompatActivity() {
         stopTimer()
         isAnimating = true
         
+        // Tema değişimi
+        if (!userSelectedTheme) {
+            val themeKeys = allThemes.keys.toList()
+            val currentIndex = themeKeys.indexOf(currentTheme)
+            currentTheme = themeKeys[(currentIndex + 1) % themeKeys.size]
+        }
+        
         // Show confetti effect
         showConfetti()
         
@@ -834,10 +888,10 @@ class MainActivity : AppCompatActivity() {
             alpha = 0f
             scaleX = 0f
             scaleY = 0f
+            gravity = android.view.Gravity.CENTER
         }
         
-        container.addView(levelCompleteText, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        levelCompleteText.x = (container.width - levelCompleteText.width) / 2f
+        container.addView(levelCompleteText, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         levelCompleteText.y = (container.height - levelCompleteText.height) / 2f
         
         levelCompleteText.animate()
