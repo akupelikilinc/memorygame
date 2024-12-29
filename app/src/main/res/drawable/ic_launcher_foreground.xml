@@ -5,21 +5,45 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     
-    <group android:scaleX="0.6"
-        android:scaleY="0.6"
-        android:translateX="21.6"
-        android:translateY="21.6">
-        
-        <!-- Background Card -->
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M20,20 L88,20 A8,8 0 0,1 96,28 L96,80 A8,8 0 0,1 88,88 L20,88 A8,8 0 0,1 12,80 L12,28 A8,8 0 0,1 20,20 z"
-            android:elevation="4dp"/>
-            
-        <!-- Question Mark -->
-        <path
-            android:fillColor="#10B981"
-            android:pathData="M54,30 Q62,30 66,34 Q70,38 70,44 Q70,48 68,51 Q66,54 60,58 Q56,61 55,63 Q54,65 54,68 L54,70 L52,70 L52,67 Q52,63 53,61 Q54,59 59,55 Q64,51 66,48 Q68,45 68,42 Q68,37 65,34 Q62,31 54,31 Q47,31 44,34 Q41,37 41,42 L39,42 Q39,36 43,33 Q47,30 54,30 M52,75 L54,75 L54,78 L52,78 L52,75"/>
-            
-    </group>
+    <!-- Background Card Shadow -->
+    <path
+        android:fillColor="#20000000"
+        android:pathData="M32,28 L78,28 A4,4 0 0,1 82,32 L82,78 A4,4 0 0,1 78,82 L32,82 A4,4 0 0,1 28,78 L28,32 A4,4 0 0,1 32,28"
+        android:translateX="2"
+        android:translateY="2"/>
+
+    <!-- Background Card -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,28 L78,28 A4,4 0 0,1 82,32 L82,78 A4,4 0 0,1 78,82 L32,82 A4,4 0 0,1 28,78 L28,32 A4,4 0 0,1 32,28"/>
+
+    <!-- Card Pattern -->
+    <path
+        android:fillColor="#E3F2FD"
+        android:pathData="M35,35h10v10h-10z"/>
+    <path
+        android:fillColor="#E3F2FD"
+        android:pathData="M65,35h10v10h-10z"/>
+    <path
+        android:fillColor="#E3F2FD"
+        android:pathData="M50,50h10v10h-10z"/>
+    <path
+        android:fillColor="#E3F2FD"
+        android:pathData="M35,65h10v10h-10z"/>
+    <path
+        android:fillColor="#E3F2FD"
+        android:pathData="M65,65h10v10h-10z"/>
+
+    <!-- Center Icon -->
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M54,54m-15,0a15,15 0 1,1 30,0a15,15 0 1,1 -30,0"/>
+    
+    <!-- Memory Icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M47,47h14v14h-14z"/>
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M49,49h10v10h-10z"/>
 </vector>
