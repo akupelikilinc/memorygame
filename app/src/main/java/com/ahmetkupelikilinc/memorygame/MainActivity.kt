@@ -1,5 +1,7 @@
 package com.ahmetkupelikilinc.memorygame
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Context
@@ -10,6 +12,8 @@ import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.LinearInterpolator
 import android.widget.Button
 import android.widget.GridLayout
 import android.widget.ImageButton
@@ -41,24 +45,25 @@ class MainActivity : AppCompatActivity() {
     private var isMusicEnabled = false
 
     private val allEmojis = listOf(
-        // Hayvanlar (Level 1-2)
+        // Seviye 1 - Hayvanlar
         "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🦁", "🐯", "🐮", "🐷",
-        // Deniz Canlıları (Level 3-4)
+        // Seviye 2 - Meyveler ve Yiyecekler
+        "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍒", "🥝", "🍍",
+        // Seviye 3 - Deniz Canlıları
         "🐋", "🐳", "🐟", "🐠", "🦈", "🐙", "🦑", "🦐", "🦞", "🦀", "🐡", "🐬",
-        // Kuşlar (Level 5-6)
-        "🦅", "🦆", "🦢", "🦉", "🦤", "🦃", "🦚", "🦜", "🕊️", "🦩", "🦙", "🦘",
-        // Böcekler (Level 7-8)
-        "🦋", "🐛", "🐞", "🐜", "🐌", "🦗", "🕷️", "🦂", "🐛", "🦟", "🐸", "🦎",
-        // Fantastik (Level 9-10)
-        "🐲", "🦕", "🦖", "🦄", "🐉", "🧚", "🧛", "🧜", "🧝", "🧞", "🧟", "🦇"
+        // Seviye 4 - Spor ve Aktiviteler
+        "⚽", "🏀", "🏈", "⚾", "🎾", "🏐", "🎱", "🏓", "🏸", "⛳", "🎯", "🎮",
+        // Seviye 5 - Uzay ve Gökyüzü
+        "🌞", "🌙", "⭐", "🌟", "☄️", "🌍", "🚀", "🛸", "🌈", "⛅", "❄️", "🌪️"
     )
 
     private fun getEmojisForLevel(level: Int): List<String> {
-        val startIndex = when {
-            level <= 2 -> 0     // Animals
-            level <= 3 -> 12    // Sea Creatures
-            level <= 4 -> 24    // Birds
-            else -> 36          // Insects
+        val startIndex = when(level) {
+            1 -> 0     // Animals
+            2 -> 12    // Fruits & Food
+            3 -> 24    // Sea Creatures
+            4 -> 36    // Sports
+            else -> 48 // Space
         }
         
         val pairsNeeded = when(level) {
@@ -77,16 +82,16 @@ class MainActivity : AppCompatActivity() {
         try {
             // Hint butonunu başlangıçta gizle
             findViewById<Button>(R.id.hintButton).visibility = View.GONE
-            
-            gridLayout = findViewById(R.id.gridLayout)
-            loadHighScore()
+
+        gridLayout = findViewById(R.id.gridLayout)
+        loadHighScore()
             setupButtons()
             setupTimer()
             setupSounds()
             
             // Oyunu başlat
             isGameActive = true
-            setupGame()
+        setupGame()
             startTimer()
             
         } catch (e: Exception) {
@@ -203,9 +208,9 @@ class MainActivity : AppCompatActivity() {
         score += matchPoints
         updateMovesText()
         updateScoreText()
-        
-        cards[position1].isMatched = true
-        cards[position2].isMatched = true
+
+            cards[position1].isMatched = true
+            cards[position2].isMatched = true
         
         playSound(matchSuccessSound)
         
@@ -272,7 +277,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupGame(autoStart: Boolean = true) {
         try {
-            // Önceki kartları temizle
             gridLayout.removeAllViews()
             
             if (autoStart) {
@@ -289,50 +293,41 @@ class MainActivity : AppCompatActivity() {
             val screenWidth = displayMetrics.widthPixels
             val screenHeight = displayMetrics.heightPixels
             
-            // UI elemanları için alan hesapla (üst ve alt boşluklar)
             val uiHeight = (200 * displayMetrics.density).toInt()
             val availableHeight = screenHeight - uiHeight
             
             val padding = (16 * displayMetrics.density).toInt()
             
-            // Seviyeye göre grid boyutlarını ayarla
             val rows = when(currentLevel) {
-                1 -> 4     // 16 kart
-                2 -> 4     // 16 kart
-                3 -> 5     // 20 kart
-                4 -> 5     // 20 kart
-                else -> 6  // 24 kart
+                1, 2 -> 4     // 16 cards
+                3, 4 -> 5     // 20 cards
+                else -> 6     // 24 cards
             }
             
-            val cols = 4  // Sütun sayısı sabit
-            maxLevel = 5  // Maksimum seviye
+            val cols = 4
+            maxLevel = 5
             
             gridLayout.rowCount = rows
             gridLayout.columnCount = cols
             
-            // Kart boyutunu hesapla
             val cardMargin = (4 * displayMetrics.density).toInt()
             val totalHorizontalMargins = cardMargin * (cols * 2)
             val totalVerticalMargins = cardMargin * (rows * 2)
             
-            // Kullanılabilir alan hesaplama
             val availableWidth = screenWidth - (padding * 2) - totalHorizontalMargins
             val availableGridHeight = availableHeight - (padding * 2) - totalVerticalMargins
             
-            // Kart boyutunu en küçük alana göre ayarla
             val maxCardWidth = availableWidth / cols
             val maxCardHeight = availableGridHeight / rows
             val baseCardSize = minOf(maxCardWidth, maxCardHeight)
             
-            // Kart boyutunu ekran yoğunluğuna göre sınırla
-            val maxCardSize = (120 * displayMetrics.density).toInt() // Kart boyutunu küçülttüm
+            val maxCardSize = (120 * displayMetrics.density).toInt()
             val cardSize = minOf(baseCardSize, maxCardSize)
             
-            // Emoji boyutunu kart boyutuna göre ayarla
             val emojiTextSize = when {
-                cardSize <= 60 -> cardSize / 2.5f  // Emoji boyutunu büyüttüm
-                cardSize <= 100 -> cardSize / 3f   // Emoji boyutunu büyüttüm
-                else -> cardSize / 4f              // Emoji boyutunu büyüttüm
+                cardSize <= 60 -> cardSize / 2.5f
+                cardSize <= 100 -> cardSize / 3f
+                else -> cardSize / 4f
             }
 
             cards = getEmojisForLevel(currentLevel).let { emojis ->
@@ -358,12 +353,14 @@ class MainActivity : AppCompatActivity() {
                 gridLayout.addView(cardButton)
             }
 
-            // Tüm kartlar yerleştirildikten sonra hint butonunu göster
             if (autoStart) {
                 Handler(Looper.getMainLooper()).postDelayed({
                     findViewById<Button>(R.id.hintButton)?.visibility = View.VISIBLE
                 }, 1000)
             }
+            
+            // Update level display
+            updateScoreText()
             
         } catch (e: Exception) {
             e.printStackTrace()
@@ -459,7 +456,7 @@ class MainActivity : AppCompatActivity() {
         isGameActive = true
         setupGame()
     }
-    
+
     private fun updateMovesText() {
         findViewById<TextView>(R.id.movesTextView).text = "Moves: $moves"
     }
@@ -467,6 +464,7 @@ class MainActivity : AppCompatActivity() {
     private fun updateScoreText() {
         findViewById<TextView>(R.id.scoreTextView).text = "Score: $score"
         findViewById<TextView>(R.id.highScoreTextView).text = "Best: $highScore"
+        findViewById<TextView>(R.id.levelTextView).text = "Level: $currentLevel"
     }
 
     private fun saveHighScore() {
@@ -475,33 +473,87 @@ class MainActivity : AppCompatActivity() {
             apply()
         }
     }
-    
+
     private fun loadHighScore() {
         highScore = getSharedPreferences("game", MODE_PRIVATE).getInt("high_score", 0)
         updateScoreText()
+    }
+
+    private fun showConfetti() {
+        val container = findViewById<ViewGroup>(android.R.id.content)
+        val width = container.width
+        val height = container.height
+        
+        repeat(50) { // 50 konfeti parçası
+            val confetti = View(this).apply {
+                setBackgroundResource(R.drawable.confetti)
+                val size = (20..40).random()
+                layoutParams = ViewGroup.LayoutParams(size, size)
+                x = (-50..width + 50).random().toFloat()
+                y = -50f
+                rotation = (-45..45).random().toFloat()
+            }
+            
+            container.addView(confetti)
+            
+            val fallDuration = (2000L..3000L).random()
+            val swayDuration = (2000L..3000L).random()
+            
+            val fallAnimator = ObjectAnimator.ofFloat(confetti, "translationY", -50f, height + 50f).apply {
+                duration = fallDuration
+                interpolator = AccelerateInterpolator()
+            }
+            
+            val swayAnimator = ObjectAnimator.ofFloat(confetti, "translationX", 
+                confetti.x - 100f, confetti.x + 100f).apply {
+                duration = swayDuration
+                repeatMode = ObjectAnimator.REVERSE
+                repeatCount = ObjectAnimator.INFINITE
+                interpolator = AccelerateDecelerateInterpolator()
+            }
+            
+            val rotateAnimator = ObjectAnimator.ofFloat(confetti, "rotation",
+                confetti.rotation, confetti.rotation + (-720..720).random().toFloat()).apply {
+                duration = fallDuration
+                interpolator = LinearInterpolator()
+            }
+            
+            AnimatorSet().apply {
+                playTogether(fallAnimator, swayAnimator, rotateAnimator)
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        container.removeView(confetti)
+                    }
+                })
+                start()
+            }
+        }
     }
 
     private fun handleLevelComplete() {
         stopTimer()
         isAnimating = true
         
+        showConfetti()
+        
         if (currentLevel < maxLevel) {
             currentLevel++
             val levelMessage = when(currentLevel) {
-                in 1..2 -> "Cute Animals"
-                3 -> "Sea Creatures"
-                4 -> "Birds"
-                else -> "Insects"
+                1 -> "Level 1: Animals"
+                2 -> "Level 2: Fruits & Food"
+                3 -> "Level 3: Sea Creatures"
+                4 -> "Level 4: Sports & Activities"
+                else -> "Level 5: Space & Sky"
             }
             
             Handler(Looper.getMainLooper()).postDelayed({
                 Toast.makeText(this, 
-                    "Congratulations! Level $currentLevel: $levelMessage", 
+                    "Congratulations! $levelMessage", 
                     Toast.LENGTH_LONG
                 ).show()
                 setupGame()
                 isAnimating = false
-            }, 1500)
+            }, 2500)
         } else {
             if (score > highScore) {
                 highScore = score
